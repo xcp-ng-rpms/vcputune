@@ -1,7 +1,7 @@
 Summary: vcputune, tools to tweak vcpu usage in dom0.
 Name: vcputune
 Version: 2.0.1
-Release: 1.xs44
+Release: 1.xs44%{dist}
 Source0: https://code.citrite.net/rest/archive/latest/projects/XS/repos/vcputune/archive?at=refs%%2Ftags%%2Fv%{version}&format=tar.gz&prefix=%{name}-%{version}#/%{name}-%{version}.tar.gz
 License: LGPLv2+
 Group: Development/Tools
