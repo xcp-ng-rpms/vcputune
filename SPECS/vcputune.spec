@@ -2,7 +2,12 @@ Summary: vcputune, tools to tweak vcpu usage in dom0.
 Name: vcputune
 Version: 2.0.1
 Release: 1.xs44
-Source0: https://code.citrite.net/rest/archive/latest/projects/XS/repos/vcputune/archive?at=refs%%2Ftags%%2Fv%{version}&format=tar.gz&prefix=%{name}-%{version}#/%{name}-%{version}.tar.gz
+
+Source0: https://code.citrite.net/rest/archive/latest/projects/XS/repos/vcputune/archive?at=refs%2Ftags%2Fv2.0.1&format=tar.gz&prefix=vcputune-2.0.1#/vcputune-2.0.1.tar.gz
+
+
+Provides: gitsha(https://code.citrite.net/rest/archive/latest/projects/XS/repos/vcputune/archive?at=refs%2Ftags%2Fv2.0.1&format=tar.gz&prefix=vcputune-2.0.1#/vcputune-2.0.1.tar.gz) = 0bf371faff06c848244488d32c3ccb8feddbc868
+
 License: LGPLv2+
 Group: Development/Tools
 Buildroot: %{_tmppath}/%{name}-root
@@ -13,7 +18,7 @@ This package's purpose is to provide a set of tools to tweak vcpu usage in dom0.
 
 
 %prep
-%autosetup -p1 -n vcputune-2.0.1
+%autosetup -p1
 %build
 %install
 
