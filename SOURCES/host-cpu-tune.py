@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (C) 2013 Citrix Ltd.
 #
@@ -20,6 +20,7 @@ import xcp.environ
 import xcp.cmd
 import xcp.logger
 import xcp.dom0
+from functools import reduce
 
 # Absolute paths
 xl            = "/usr/sbin/xl"
@@ -39,14 +40,14 @@ def call(c, exOnErr=True):
 def get_host_uuid():
     try:
         return xcp.environ.readInventory()['INSTALLATION_UUID']
-    except StandardError:
+    except Exception:
         raise RuntimeError("INSTALLATION_UUID missing from inventory")
 
 # Helper function to interface with xcp.environ.readInventory()
 def get_dom0_uuid():
     try:
         return xcp.environ.readInventory()['CONTROL_DOMAIN_UUID']
-    except StandardError:
+    except Exception:
         raise RuntimeError("CONTROL_DOMAIN_UUID missing from inventory")
 
 # Shows current running configuration
@@ -79,15 +80,15 @@ def show():
         else:
             pin_str = "pinned"
 
-    print "dom0's vCPU count: %d, %s" % (len(dom0_vcpus), pin_str)
+    print("dom0's vCPU count: %d, %s" % (len(dom0_vcpus), pin_str))
 
 # Helper function to get number of host pCPUs
 def get_nr_pcpus():
     # Get hosts's pCPUs from 'xl info'
     try:
         lines = call([xl, "info"])
-        return int(filter(lambda line: line.startswith("nr_cpus"), lines)[0].split(':')[1])
-    except StandardError:
+        return int([line for line in lines if line.startswith("nr_cpus")][0].split(':')[1])
+    except Exception:
         raise RuntimeError("no nr_cpus in xl info output.")
 
 # Helper function to get amount of static-max memory in MB
@@ -127,9 +128,9 @@ def advise():
         pin_str = "not using pinning"
         pin_cmd = "nopin"
 
-    print "It is recommended to assign %d vCPUs to dom0, %s." % (recom_vcpu, pin_str)
-    print "This can be achieved by running:\n"
-    print "%s set %d %s\n" % (sys.argv[0], recom_vcpu, pin_cmd)
+    print("It is recommended to assign %d vCPUs to dom0, %s." % (recom_vcpu, pin_str))
+    print("This can be achieved by running:\n")
+    print("%s set %d %s\n" % (sys.argv[0], recom_vcpu, pin_cmd))
 
 # Function to set a new host configuration
 def cpuset(dom0_vcpus, typePin, forcePin=False):
@@ -142,18 +143,18 @@ def cpuset(dom0_vcpus, typePin, forcePin=False):
 
     # Validate dom0_vcpus parameter
     if dom0_vcpus <= 0:
-        print "ERROR: parameter 'dom0_vcpus' must be greater than zero."
+        print("ERROR: parameter 'dom0_vcpus' must be greater than zero.")
         return
     elif dom0_vcpus > nr_pcpus:
-        print "ERROR: this host only has %d pCPUs. Cannot give dom0 %d vCPUs." % (nr_pcpus, dom0_vcpus)
+        print("ERROR: this host only has %d pCPUs. Cannot give dom0 %d vCPUs." % (nr_pcpus, dom0_vcpus))
         return
 
     # Validate pinning parameter
     if typePin != "nopin" and typePin != "xpin":
-        print "ERROR: parameter 'pinning' must be set to 'nopin' or 'xpin'"
+        print("ERROR: parameter 'pinning' must be set to 'nopin' or 'xpin'")
         return
     if typePin == "xpin" and dom0_vcpus >= nr_pcpus:
-        print "ERROR: cannot exclusively pin %d vCPUs to dom0. No vCPUs will be available to other guests." % (dom0_vcpus,)
+        print("ERROR: cannot exclusively pin %d vCPUs to dom0. No vCPUs will be available to other guests." % (dom0_vcpus,))
         return
 
     # Verify that this setting will not conflict with VMs in this pool
@@ -175,19 +176,19 @@ def cpuset(dom0_vcpus, typePin, forcePin=False):
             for vm_pcpu in vm_aff_l:
                 if int(vm_pcpu) < dom0_vcpus:
                     if warn_flag == False:
-                        print "ERROR: VM '%s' is pinned to pCPUs %s." % (vm, vm_aff_s[0])
+                        print("ERROR: VM '%s' is pinned to pCPUs %s." % (vm, vm_aff_s[0]))
                         warn_flag = True
                         pin_conflict = True
-                    print "       pCPU '%s' is being exclusively pinned to dom0." % (vm_pcpu,)
+                    print("       pCPU '%s' is being exclusively pinned to dom0." % (vm_pcpu,))
             if warn_flag:
-                print "       PLEASE REVIEW THE MANUAL PINNING OF THIS VM."
-                print "       IT MIGHT FAIL TO START ON, RESUME ON OR MIGRATE TO THIS HOST.\n"
+                print("       PLEASE REVIEW THE MANUAL PINNING OF THIS VM.")
+                print("       IT MIGHT FAIL TO START ON, RESUME ON OR MIGRATE TO THIS HOST.\n")
 
     # In pinning conflict cases, only go further if user is forcing
     if pin_conflict and forcePin == False:
-        print "No configuration changes were made due to the errors above."
-        print "Please verify the VCPUs-params:mask of the conflicting VMs."
-        print "If you understand the implications of these errors, you may call this program again with '--force'."
+        print("No configuration changes were made due to the errors above.")
+        print("Please verify the VCPUs-params:mask of the conflicting VMs.")
+        print("If you understand the implications of these errors, you may call this program again with '--force'.")
         return
 
     # Set dom0 vCPU count
@@ -199,7 +200,7 @@ def cpuset(dom0_vcpus, typePin, forcePin=False):
     call([xe, "host-param-remove", "uuid=%s" % (host_uuid,), "param-name=guest_VCPUs_params", "param-key=mask"], exOnErr=False)
     if typePin == "xpin":
         # Create list with VM's pCPUs
-        vms_pcpus = range(dom0_vcpus, nr_pcpus)
+        vms_pcpus = list(range(dom0_vcpus, nr_pcpus))
         vms_str   = reduce(lambda a,x: (str(x), a+","+str(x))[a!=""], vms_pcpus, "")
 
         # Set XAPI VM vCPU affinity
@@ -209,8 +210,8 @@ def cpuset(dom0_vcpus, typePin, forcePin=False):
         call([xencmd, "--set-xen", "dom0_vcpus_pin"])
 
     # Print final message
-    print "Configuration successfully applied."
-    print "Reboot this host NOW."
+    print("Configuration successfully applied.")
+    print("Reboot this host NOW.")
 
 def reset():
     # Fetch defaults
@@ -221,20 +222,20 @@ def reset():
 
 # Function to print help
 def usage():
-    print "Usage: %s { show | advise | set <dom0_vcpus> <pinning> [--force] }" % (sys.argv[0],)
-    print "         show     Shows current running configuration"
-    print "         advise   Advise on a configuration for current host"
-    print "         reset    Reset host's configuration to default strategy"
-    print "         set      Set host's configuration for next reboot"
-    print "          <dom0_vcpus> specifies how many vCPUs to give dom0"
-    print "          <pinning>    specifies the host's pinning strategy"
-    print "                       allowed values are 'nopin' or 'xpin'"
-    print "          [--force]    forces xpin even if VMs conflict\n"
-    print "Examples: %s show" % (sys.argv[0],)
-    print "          %s advise" % (sys.argv[0],)
-    print "          %s set 4 nopin" % (sys.argv[0],)
-    print "          %s set 8 xpin" % (sys.argv[0],)
-    print "          %s set 8 xpin --force" % (sys.argv[0],)
+    print("Usage: %s { show | advise | set <dom0_vcpus> <pinning> [--force] }" % (sys.argv[0],))
+    print("         show     Shows current running configuration")
+    print("         advise   Advise on a configuration for current host")
+    print("         reset    Reset host's configuration to default strategy")
+    print("         set      Set host's configuration for next reboot")
+    print("          <dom0_vcpus> specifies how many vCPUs to give dom0")
+    print("          <pinning>    specifies the host's pinning strategy")
+    print("                       allowed values are 'nopin' or 'xpin'")
+    print("          [--force]    forces xpin even if VMs conflict\n")
+    print("Examples: %s show" % (sys.argv[0],))
+    print("          %s advise" % (sys.argv[0],))
+    print("          %s set 4 nopin" % (sys.argv[0],))
+    print("          %s set 8 xpin" % (sys.argv[0],))
+    print("          %s set 8 xpin --force" % (sys.argv[0],))
 
 # Main function that parses parameters
 def main():
@@ -251,7 +252,7 @@ def main():
                 try:
                     dom0_vcpus = int(sys.argv[2])
                 except ValueError:
-                    print "ERROR: parameter 'dom0_vcpus' must be an integer, not: '%s'" % (sys.argv[2],)
+                    print("ERROR: parameter 'dom0_vcpus' must be an integer, not: '%s'" % (sys.argv[2],))
                     return
                 cpuset(dom0_vcpus, sys.argv[3])
             elif len(sys.argv) == 5 and sys.argv[4] == "--force":
