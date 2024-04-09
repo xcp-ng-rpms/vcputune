@@ -1,12 +1,11 @@
-%global package_speccommit b9aa760ebceaa8069588081fce75b52dbb0d6aad
-%global usver 2.0.1
-%global xsver 5
+%global package_speccommit f28f6965750b210411d91d996537f66f0469b5f8
+%global usver 2.0.2
+%global xsver 1
 %global xsrel %{xsver}%{?xscount}%{?xshash}
-%global package_srccommit v2.0.1
 
 Summary: vcputune, tools to tweak vcpu usage in dom0.
 Name: vcputune
-Version: 2.0.1
+Version: 2.0.2
 Release: %{?xsrel}%{?dist}
 Source0: host-cpu-tune.py
 License: LGPLv2+
@@ -17,6 +16,7 @@ BuildArch: noarch
 %description
 This package's purpose is to provide a set of tools to tweak vcpu usage in dom0.
 
+Requires: python3-xcp-libs
 
 %prep
 %build
@@ -33,6 +33,9 @@ rm -rf $RPM_BUILD_ROOT
 /opt/xensource/bin/host-cpu-tune
 
 %changelog
+* Thu Nov 30 2023 Stephen Cheng <stephen.cheng@cloud.com> - 2.0.2-1
+- CP-45985: Update host-cpu-tune from python2 to python3
+
 * Fri Dec 10 2021 Edwin Török <edvin.torok@citrix.com> - 2.0.1-5
 - Maintenance: move single source into .spec repo instead of separate repo
 - CP-38218: rename to .py so SonarQube can find it
