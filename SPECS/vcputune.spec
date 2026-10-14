@@ -6,7 +6,7 @@
 Summary: vcputune, tools to tweak vcpu usage in dom0.
 Name: vcputune
 Version: 2.0.2
-Release: %{?xsrel}%{?dist}
+Release: %{?xsrel}.0.neuf.1%{?dist}
 Source0: host-cpu-tune.py
 License: LGPLv2+
 Group: Development/Tools
