@@ -1,6 +1,6 @@
-%global package_speccommit f28f6965750b210411d91d996537f66f0469b5f8
+%global package_speccommit 12e0fcd3c3b0e18e98254aafad9a4fcca2ff3ce0
 %global usver 2.0.2
-%global xsver 1
+%global xsver 2
 %global xsrel %{xsver}%{?xscount}%{?xshash}
 
 Summary: vcputune, tools to tweak vcpu usage in dom0.
@@ -33,6 +33,9 @@ rm -rf $RPM_BUILD_ROOT
 /opt/xensource/bin/host-cpu-tune
 
 %changelog
+* Tue Jan 21 2025 XenServer Rebuild <rebuild@xenserver.com> - 2.0.2-2
+- CP-53310: XenServer 9 rebuild
+
 * Thu Nov 30 2023 Stephen Cheng <stephen.cheng@cloud.com> - 2.0.2-1
 - CP-45985: Update host-cpu-tune from python2 to python3
 
